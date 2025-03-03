@@ -37,7 +37,9 @@ app.post("/register", async (req, res) => {
     const token = jwt.sign({ email: user.email }, SECRET_KEY, {
       expiresIn: "1h",
     });
-    res.status(201).json({ token, email: user.email, name: user.name });
+    res
+      .status(201)
+      .json({ token, email: user.email, name: user.name, role: user.role });
     console.log("Register Succesful");
   } catch (error) {
     res
@@ -60,7 +62,9 @@ app.post("/login", async (req, res) => {
       const token = jwt.sign({ email: user.email }, SECRET_KEY, {
         expiresIn: "1h",
       });
-      res.status(200).json({ token, email: user.email, name: user.name });
+      res
+        .status(200)
+        .json({ token, email: user.email, name: user.name, role: user.role });
       console.log("Успешный вход");
     } else {
       res.status(401).json({ message: "Неверный email или пароль" });

@@ -1,4 +1,4 @@
-export function decodeToken(token) {
+export const decodeToken = (token) => {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -10,9 +10,14 @@ export function decodeToken(token) {
         })
         .join("")
     );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error("Invalid token", e);
+
+    const payload = JSON.parse(jsonPayload);
+    return {
+      email: payload.email,
+      name: payload.name, // Убедитесь, что имя включено в payload токена
+    };
+  } catch (error) {
+    console.error("Error decoding token:", error);
     return null;
   }
-}
+};

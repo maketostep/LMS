@@ -15,6 +15,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  ListItemButton,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -39,7 +40,8 @@ import GroupsSection from "../components/dashboard/GroupsSection";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import { login } from "../reducers/userSlice";
+import { login, userData, logout } from "../redux/slices/userSlice";
+import { decodeToken } from "../functions/auth/decodeToken";
 
 const drawerWidth = 240;
 
@@ -50,20 +52,30 @@ function Dashboard() {
   // Состояние для меню профиля
   const [anchorEl, setAnchorEl] = useState(null);
   //// REDUX
-  const { name, email } = useSelector((state) => state.user);
+  const { email, name, role } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   ////////////////////////
-  console.log(name, email);
+  console.log(email, name);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    dispatch(login());
     if (!token) {
       navigate("/auth");
+    } else {
+      const decodedToken = decodeToken(token);
+      if (decodedToken) {
+        dispatch(
+          userData({
+            email: email,
+            name: name,
+            role: role,
+          })
+        );
+      }
     }
-  });
+  }, [dispatch, navigate]);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -84,8 +96,8 @@ function Dashboard() {
   // Обработчик для выхода из системы
   const handleLogout = () => {
     dispatch(logout());
-
     localStorage.removeItem("AuthToken");
+    navigate("/auth");
   };
   const handleSectionChange = (section) => {
     setSelectedSection(section);
@@ -105,7 +117,7 @@ function Dashboard() {
       case "groups":
         return <GroupsSection />;
       case "profile":
-        return <ProfileSection />;
+        return <ProfileSection email={email} name={name} role={role} />;
       default:
         return <StatisticsSection />;
     }
@@ -140,7 +152,9 @@ function Dashboard() {
           </Typography>
           <Tooltip title="Профиль">
             <IconButton onClick={handleMenuOpen} color="inherit">
-              <Avatar sx={{ width: 32, height: 32 }}>A</Avatar>
+              <Avatar sx={{ width: 32, height: 32 }}>
+                {name ? name[0].toUpperCase() : "A"}
+              </Avatar>
             </IconButton>
           </Tooltip>
           <Menu
@@ -215,8 +229,7 @@ function Dashboard() {
         </Box>
         <Divider />
         <List>
-          <ListItem
-            button
+          <ListItemButton
             selected={selectedSection === "statistics"}
             onClick={() => handleSectionChange("statistics")}
           >
@@ -224,9 +237,8 @@ function Dashboard() {
               <BarChartIcon />
             </ListItemIcon>
             <ListItemText primary="Статистика" />
-          </ListItem>
-          <ListItem
-            button
+          </ListItemButton>
+          <ListItemButton
             selected={selectedSection === "courses"}
             onClick={() => handleSectionChange("courses")}
           >
@@ -234,42 +246,44 @@ function Dashboard() {
               <SchoolIcon />
             </ListItemIcon>
             <ListItemText primary="Курсы" />
-          </ListItem>
-          <ListItem
-            button
-            selected={selectedSection === "users"}
-            onClick={() => handleSectionChange("users")}
-          >
-            <ListItemIcon>
-              <PeopleIcon />
-            </ListItemIcon>
-            <ListItemText primary="Пользователи" />
-          </ListItem>
-          <ListItem
-            button
-            selected={selectedSection === "groups"}
-            onClick={() => handleSectionChange("groups")}
-          >
-            <ListItemIcon>
-              <GroupIcon />
-            </ListItemIcon>
-            <ListItemText primary="Группы" />
-          </ListItem>
-          <ListItem
-            button
-            selected={selectedSection === "answers"}
-            onClick={() => handleSectionChange("answers")}
-          >
-            <ListItemIcon>
-              <AssignmentIcon />
-            </ListItemIcon>
-            <ListItemText primary="Ответы" />
-          </ListItem>
+          </ListItemButton>
+          {role === "Администратор" && (
+            <ListItemButton
+              selected={selectedSection === "users"}
+              onClick={() => handleSectionChange("users")}
+            >
+              <ListItemIcon>
+                <PeopleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Пользователи" />
+            </ListItemButton>
+          )}
+          {role === "Администратор" && (
+            <ListItemButton
+              selected={selectedSection === "groups"}
+              onClick={() => handleSectionChange("groups")}
+            >
+              <ListItemIcon>
+                <GroupIcon />
+              </ListItemIcon>
+              <ListItemText primary="Группы" />
+            </ListItemButton>
+          )}
+          {role === "Администратор" && (
+            <ListItemButton
+              selected={selectedSection === "answers"}
+              onClick={() => handleSectionChange("answers")}
+            >
+              <ListItemIcon>
+                <AssignmentIcon />
+              </ListItemIcon>
+              <ListItemText primary="Ответы" />
+            </ListItemButton>
+          )}
         </List>
         <Divider />
         <List>
           <ListItem
-            button
             selected={selectedSection === "profile"}
             onClick={() => handleSectionChange("profile")}
           >

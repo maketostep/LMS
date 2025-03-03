@@ -11,7 +11,7 @@ import { AuthServer } from "../functions/auth/authServer";
 import { useNavigate } from "react-router";
 import { decodeToken } from "../functions/auth/decodeToken";
 import { useDispatch } from "react-redux";
-import { login } from "../reducers/userSlice";
+import { login } from "../redux/slices/userSlice";
 
 function Auth() {
   const [email, setEmail] = useState("");
@@ -20,8 +20,10 @@ function Auth() {
   const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch(); // Использование Redux
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
+    // Если есть токен, проверяем его действительность
     if (token) {
       const decoded = decodeToken(token);
       const currentTime = Date.now() / 1000; // Время в секундах
@@ -33,17 +35,19 @@ function Auth() {
     }
   }, [navigate]);
 
-  const handleSubmit = async (event) => {
+  const checkUserData = async (event) => {
     setAlert(null);
     event.preventDefault();
     console.log(authType, email, password);
     try {
       const data = await AuthServer(email, password, authType);
+      console.log(data);
       if (data[0] === 200 || data[0] === 201) {
         dispatch(
           login({
             token: data[1].token,
             email: email,
+            role: data[1].role,
             name: data[1].name,
             password: password,
           })
@@ -62,26 +66,6 @@ function Auth() {
       console.error(error);
       setAlert(<Alert severity="error">Ошибка сервера</Alert>);
     }
-    // switch (data[0]) {
-    //   case 401:
-    //     setAlert(<Alert severity="error">{data[1].message}</Alert>);
-    //     break;
-    //   case 200:
-    //     setAlert(<Alert severity="success">Успешный вход!</Alert>);
-    //     localStorage.setItem("authToken", data[1].token);
-    //     navigate("/dashboard");
-    //   case 201:
-    //     setAlert(<Alert severity="success">Успешная регистрация!</Alert>);
-    //     localStorage.setItem("authToken", data[1].token);
-    //     navigate("/dashboard");
-    //     break;
-    //   case 500:
-    //     setAlert(<Alert severity="error">{data[1].message}</Alert>);
-    //     break;
-    //   default:
-    //     setAlert("Неизвестная ошибка");
-    //     break;
-    // }
   };
 
   return (
@@ -98,7 +82,7 @@ function Auth() {
         <Typography component="h1" variant="h5">
           {authType ? "Вход" : "Регистрация"}
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={checkUserData} sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
