@@ -5,7 +5,9 @@ export async function AuthServer(email, password, type) {
   };
   try {
     const response = await fetch(
-      `http://192.168.0.253:5000/${type ? "login" : "register"}`,
+      `${import.meta.env.VITE_AUTH_SERVER_HTTPS}/auth/${
+        type ? "login" : "register"
+      }`,
       {
         method: "POST",
         headers: {
