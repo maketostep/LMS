@@ -5,7 +5,7 @@ import { Outlet } from "react-router";
 const App = () => {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <Outlet />
     </>
   );
