@@ -13,67 +13,83 @@ import { School, People, AccessTime } from "@mui/icons-material";
 import {
   getCourseList,
   getStudentCountByCourse,
-} from "../../functions/data/coursesData";
+} from "../../../functions/data/coursesData";
 
 // Демо-данные для курсов
-const demoСourses = [
-  {
-    id: 1,
-    title: "Введение в React",
-    description: "Базовый курс по React для начинающих разработчиков",
-    students: 24,
-    duration: "8 недель",
-    status: "active",
-  },
-  {
-    id: 2,
-    title: "JavaScript продвинутый",
-    description:
-      "Углубленное изучение JavaScript и современных возможностей языка",
-    students: 18,
-    duration: "10 недель",
-    status: "active",
-  },
-  {
-    id: 3,
-    title: "Основы Node.js",
-    description: "Изучение серверной разработки на Node.js",
-    students: 15,
-    duration: "6 недель",
-    status: "draft",
-  },
-  {
-    id: 4,
-    title: "Redux и управление состоянием",
-    description:
-      "Продвинутые техники управления состоянием в React-приложениях",
-    students: 12,
-    duration: "4 недели",
-    status: "active",
-  },
-];
+// const demoСourses = [
+//   {
+//     id: 1,
+//     title: "Введение в React",
+//     description: "Базовый курс по React для начинающих разработчиков",
+//     students: 24,
+//     duration: "8 недель",
+//     status: "active",
+//   },
+//   {
+//     id: 2,
+//     title: "JavaScript продвинутый",
+//     description:
+//       "Углубленное изучение JavaScript и современных возможностей языка",
+//     students: 18,
+//     duration: "10 недель",
+//     status: "active",
+//   },
+//   {
+//     id: 3,
+//     title: "Основы Node.js",
+//     description: "Изучение серверной разработки на Node.js",
+//     students: 15,
+//     duration: "6 недель",
+//     status: "draft",
+//   },
+//   {
+//     id: 4,
+//     title: "Redux и управление состоянием",
+//     description:
+//       "Продвинутые техники управления состоянием в React-приложениях",
+//     students: 12,
+//     duration: "4 недели",
+//     status: "active",
+//   },
+// ];
 
 function CoursesSection() {
-  const [Courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
+    // Получаем список курсов
     async function fetchData() {
-      const [error, courses] = await getCourseList();
+      const [error, data] = await getCourseList();
 
       if (error) {
-        // console.log(error);
         return setErrorMessage(await error.message);
       } else {
-        console.log(courses);
-        const count = await getStudentCountByCourse(courses[0].course_id);
-        return setCourses([...courses, { students: count.studentsCount }]);
+        for (const course of data) {
+          const count = await getStudentCountByCourse(course.course_id);
+          course.students = parseInt(count.studentCount);
+          return setCourses([...data]);
+        }
       }
     }
     fetchData();
     setLoading(false);
-  }, [loading]);
+  }, []);
+
+  // useEffect(() => {
+  //   setLoading(true);
+  //   async function fetchStudentCounts() {
+  //     for (const course of courses) {
+  //       const count = await getStudentCountByCourse(course.course_id);
+  //       course.students = parseInt(count.studentCount);
+  //       setCourses([...courses]);
+  //     }
+  //   }
+  //   fetchStudentCounts();
+  //   console.log(courses);
+  //   setLoading(false);
+  // }, []);
 
   const renderCourse = (course) => <Card key={course.id}></Card>;
   return (
@@ -97,10 +113,10 @@ function CoursesSection() {
       </Typography>
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
-        {!loading ? (
-          (console.log(Courses),
-          (<Box>Загрузка...</Box>),
-          Courses.map((course) => (
+        {loading ? (
+          <Typography>Загрузка</Typography>
+        ) : (
+          courses.map((course) => (
             <Grid item xs={12} sm={6} md={4} key={course.course_id}>
               <Card
                 sx={{
@@ -141,7 +157,8 @@ function CoursesSection() {
                       sx={{ mr: 1, color: "text.secondary" }}
                     />
                     <Typography variant="body2" color="text.secondary">
-                      {course.students} студентов
+                      {course.students}{" "}
+                      {course.students === 1 ? "студент" : "студента/студентов"}
                     </Typography>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -150,7 +167,7 @@ function CoursesSection() {
                       sx={{ mr: 1, color: "text.secondary" }}
                     />
                     <Typography variant="body2" color="text.secondary">
-                      {course.duration}
+                      {course.duration} {course.duration === 1 ? "час" : "часа"}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -162,9 +179,7 @@ function CoursesSection() {
                 </CardActions>
               </Card>
             </Grid>
-          )))
-        ) : (
-          <Typography>{errorMessage}</Typography>
+          ))
         )}
       </Grid>
     </Box>
